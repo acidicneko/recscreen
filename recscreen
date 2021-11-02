@@ -75,14 +75,14 @@ main () {
 		mkdir -p ~/Videos/Screenrecord
 	fi
 
-	while getopts ":hpo:r:" options; do
+	while getopts ":hpf:o:r:" options; do
 		case "${options}" in
 		h)
 			help
 			exit 0
 			;;
 		o)
-			RECDIR="${OPTARG}"
+			OUTPUT="${OPTARG}"
 			;;
 		f)
 			FR="${OPTARG}"
