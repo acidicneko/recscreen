@@ -9,6 +9,8 @@ OUTPUT=~/Videos/Screenrecord/"${whenrec}.mp4"
 
 FR=30 
 
+DELAY=0
+
 deviceid=43
 
 resolution=1366x768
@@ -60,6 +62,7 @@ help () {
 	echo "[-h] show help menu"
 	echo "[-o OUTPUT ] specify output video name"
 	echo "[-f FPS ] specify the number of Frames per Second"
+	echo "[-d SECONDS] delay before recording in seconds"
 	echo "[-r RESOLUTION ] specify the resolution in pixels in WIDTHxHEIGHT format"
 	echo "[-p] use pipewire instead of alsa"
 	echo
@@ -75,7 +78,7 @@ main () {
 		mkdir -p ~/Videos/Screenrecord
 	fi
 
-	while getopts ":hpf:o:r:" options; do
+	while getopts ":hpf:d:o:r:" options; do
 		case "${options}" in
 		h)
 			help
@@ -86,6 +89,9 @@ main () {
 			;;
 		f)
 			FR="${OPTARG}"
+			;;
+		d)
+			DELAY="${OPTARG}"
 			;;
 		p)
 			mode="pipewire"
@@ -103,12 +109,26 @@ main () {
 			;;
 		esac
 	done
-
-	if [ "$mode" = "pipewire" ] ; then
-		record_pipewire
-	elif [ "$mode" = "alsa" ] ; then
-		record_alsa
+	if (( $DELAY < 10 )) ; then
+		printf "Starting in  "
+	else
+		printf "Starting in %d" "$DELAY"
 	fi
+
+	for ((i = 1 ; i <= $DELAY ; i++))
+	do
+		if (( $DELAY < 10 )) ; then
+			printf "\b%d" "$i"
+		fi
+		sleep 1
+	done
+	echo
+	echo lol
+	#if [ "$mode" = "pipewire" ] ; then
+	#	record_pipewire
+	#elif [ "$mode" = "alsa" ] ; then
+	#	record_alsa
+	#fi
 }
 
 main $@
