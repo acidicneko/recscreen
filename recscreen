@@ -115,20 +115,19 @@ main () {
 		printf "Starting in %d" "$DELAY"
 	fi
 
-	for ((i = 1 ; i <= $DELAY ; i++))
+	for ((i = $DELAY ; i >= 0 ; i--))
 	do
 		if (( $DELAY < 10 )) ; then
 			printf "\b%d" "$i"
 		fi
 		sleep 1
 	done
-	echo
-	echo lol
-	#if [ "$mode" = "pipewire" ] ; then
-	#	record_pipewire
-	#elif [ "$mode" = "alsa" ] ; then
-	#	record_alsa
-	#fi
+
+	if [ "$mode" = "pipewire" ] ; then
+		record_pipewire
+	elif [ "$mode" = "alsa" ] ; then
+		record_alsa
+	fi
 }
 
 main $@
