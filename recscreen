@@ -1,5 +1,5 @@
 #!/bin/env bash
-# --- By Kiriyama and Clawbhaiya ---
+# --- By Kiriyama and Acidicneko ---
 
 whenrec=$(date +"%d-%m-%y_%H-%M_")
 
@@ -14,6 +14,7 @@ DELAY=0
 deviceid=43
 
 resolution=1366x768
+scale=$resolution
 
 TEMPDIR=~/.cache/recscreen
 
@@ -21,8 +22,8 @@ record_alsa () {
 	ffmpeg \
 		-use_wallclock_as_timestamps 1 \
 		-f pulse -ac 2 -ar 44100 -i alsa_output.pci-0000_00_1f.3.analog-stereo.monitor \
-		-f x11grab -r $FR -s 1366x768 -i :0.0 \
-		-vf scale=$resolution:flags=lanczos \
+		-f x11grab -r $FR -s $resolution -i :0.0 \
+		-vf scale=$scale:flags=lanczos \
 		-vcodec libx264 -preset veryfast \
 		-acodec libmp3lame -ar 44100 -q:a 1 \
 		-pix_fmt yuv420p \
@@ -44,7 +45,7 @@ record_pipewire () {
 	ffmpeg \
     	-f x11grab -framerate $FR -i :0.0 \
     	-vcodec libx264 -crf 7 \
-    	-vf scale=$resolution\
+    	-vf -s $resolution scale=$scale\
     	-preset superfast \
     	$TEMPDIR/video.mkv 
 
@@ -60,11 +61,12 @@ help () {
 	echo "Recscreen by Kiriyama"
 	echo
 	echo "[-h] show help menu"
+	echo "[-p] use pipewire instead of alsa"
 	echo "[-o OUTPUT ] specify output video name"
 	echo "[-f FPS ] specify the number of Frames per Second"
 	echo "[-d SECONDS] delay before recording in seconds"
 	echo "[-r RESOLUTION ] specify the resolution in pixels in WIDTHxHEIGHT format"
-	echo "[-p] use pipewire instead of alsa"
+	echo "[-s SCALE] scales up the final video to given resolution; defaults to RESOLUTION"
 	echo
 }
 
@@ -78,7 +80,7 @@ main () {
 		mkdir -p ~/Videos/Screenrecord
 	fi
 
-	while getopts ":hpf:d:o:r:" options; do
+	while getopts ":hpf:d:o:r:s:" options; do
 		case "${options}" in
 		h)
 			help
@@ -98,6 +100,9 @@ main () {
 			;;
 		r)
 			resolution="${OPTARG}"
+			;;
+		s)
+			scale="${OPTARG}"
 			;;
 		:)
 			echo "Error: -${OPTARG} requires an argument."
