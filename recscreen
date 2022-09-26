@@ -18,7 +18,10 @@ scale=$resolution
 
 TEMPDIR=~/.cache/recscreen
 
+ADD_FLAGS="> /dev/null 2>&1"
+
 record_alsa () {
+	echo "Started recording..."
 	ffmpeg \
 		-use_wallclock_as_timestamps 1 \
 		-f pulse -ac 2 -ar 44100 -i alsa_output.pci-0000_00_1f.3.analog-stereo.monitor \
@@ -27,41 +30,47 @@ record_alsa () {
 		-vcodec libx264 -preset veryfast \
 		-acodec libmp3lame -ar 44100 -q:a 1 \
 		-pix_fmt yuv420p \
-		$TEMPDIR/temp.mp4
+		$TEMPDIR/temp.mp4 \
+		$ADD_FLAGS
 	
+	echo "Doing some magic..."
 	ffmpeg \
     	-i $TEMPDIR/temp.mp4 \
     	-itsoffset $DEOFFSET \
     	-i $TEMPDIR/temp.mp4 \
     	-vcodec copy -acodec copy \
     	-map 0:0 -map 1:1 \
-    	$OUTPUT
+    	$OUTPUT $ADD_FLAGS
 		
 	rm -rf $TEMPDIR
 }
 
 record_pipewire () {
+	echo "Started recording..."
 	pw-record --target $deviceid $TEMPDIR/audio.wav & \
 	ffmpeg \
     	-f x11grab -framerate $FR -i :0.0 \
     	-vcodec libx264 -crf 7 \
     	-vf -s $resolution scale=$scale\
     	-preset superfast \
-    	$TEMPDIR/video.mkv 
+    	$TEMPDIR/video.mkv \
+		$ADD_FLAGS
 
+	echo "Doing some magic..."
 	ffmpeg \
     	-i $TEMPDIR/video.mkv -i $TEMPDIR/audio.wav \
     	-c:v copy -map 0:v:0 -map 1:a:0 -c:a aac -b:a 300k \
-    	$OUTPUT
+    	$OUTPUT $ADD_FLAGS
 
 	rm -rf $TEMPDIR
 }
 
 help () {
-	echo "Recscreen by Kiriyama"
+	echo "Recscreen"
 	echo
 	echo "[-h] show help menu"
 	echo "[-p] use pipewire instead of alsa"
+	echo "[-v] show logs"
 	echo "[-o OUTPUT ] specify output video name"
 	echo "[-f FPS ] specify the number of Frames per Second"
 	echo "[-d SECONDS] delay before recording in seconds"
@@ -80,7 +89,7 @@ main () {
 		mkdir -p ~/Videos/Screenrecord
 	fi
 
-	while getopts ":hpf:d:o:r:s:" options; do
+	while getopts ":hpvf:d:o:r:s:" options; do
 		case "${options}" in
 		h)
 			help
@@ -97,6 +106,9 @@ main () {
 			;;
 		p)
 			mode="pipewire"
+			;;
+		v)
+			ADD_FLAGS=""
 			;;
 		r)
 			resolution="${OPTARG}"
